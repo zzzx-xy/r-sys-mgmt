@@ -1,0 +1,6 @@
+{
+  "appId": "com.hrytes.sysmgmt",
+  "appName": "SYS-MGMT",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
