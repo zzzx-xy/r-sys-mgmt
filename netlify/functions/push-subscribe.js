@@ -4,39 +4,19 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" }),
-    };
+    return { statusCode: 405, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok: false, error: "METHOD" }) };
   }
 
   let payload;
   try {
     payload = JSON.parse(event.body || "{}");
   } catch {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "INVALID_JSON" }),
-    };
+    return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok: false, error: "BAD_JSON" }) };
   }
 
   const sub = payload?.sub;
-  if (!sub || typeof sub !== "object") {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "MISSING_SUBSCRIPTION" }),
-    };
-  }
-
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "MISSING_SUPABASE_ENV" }),
-    };
+  if (!sub) {
+    return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok: false, error: "MISSING_SUB" }) };
   }
 
   const { data, error } = await supabase
@@ -46,7 +26,6 @@ export const handler = async (event) => {
     .single();
 
   if (error) {
-    console.error("push-subscribe insert error:", error);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
