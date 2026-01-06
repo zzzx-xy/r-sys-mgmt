@@ -7,6 +7,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+
+      // IMPORTANT: A custom SW to handle push
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
+
       manifest: {
         name: "SYS-MGMT",
         short_name: "SYS-MGMT",

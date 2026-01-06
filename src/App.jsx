@@ -209,6 +209,38 @@ export default function App() {
   const [now, setNow] = useState(() => new Date());
   const [activeError, setActiveErrorState] = useState(() => getActiveError());
 
+  // Web Push -> App bridge (PWA)
+useEffect(() => {
+  if (!("serviceWorker" in navigator)) return;
+
+  const onMsg = (evt) => {
+    const msg = evt?.data;
+    if (!msg || msg.type !== "SYS_MGMT_PUSH") return;
+
+    // Parse body: "E|I=<uuid>|R=R3|S=CRITICAL|C=HTTP|V=503"
+    const body = String(msg.body || "");
+    const incidentId = (body.match(/\bI=([0-9a-fA-F-]{36})\b/) || [])[1] || null;
+    const restaurant = (body.match(/\bR=(R[1-5])\b/) || [])[1] || null;
+    const severity = (body.match(/\bS=(INFO|WARN|CRITICAL)\b/) || [])[1] || null;
+
+    const active = {
+      ts: Date.now(),
+      title: msg.title || "ERROR",
+      body,
+      restaurant,
+      severity,
+      incidentId,
+    };
+
+    setActiveError(active);          // persist (your existing storage setter)
+    setActiveErrorState(active);     // update UI immediately
+    auditAppend({ type: "WEB_PUSH_RECEIVED", ...active });
+  };
+
+  navigator.serviceWorker.addEventListener("message", onMsg);
+  return () => navigator.serviceWorker.removeEventListener("message", onMsg);
+}, []);
+
   // Sync active error storage
   useEffect(() => {
     const id = setInterval(() => setActiveErrorState(getActiveError()), 1000);
